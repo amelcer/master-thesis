@@ -1,22 +1,41 @@
 import express from "express";
-import fs from "node:fs";
+import {
+  getAvgCpuUsage,
+  getAvgRamUsage,
+  savePerformanceTestData,
+} from "./utils.mjs";
 
 const app = express();
+
 app.use(express.json());
 
-app.post("/save", async (req, res) => {
+app.post("/save-performance-metrics", async (req, res) => {
   console.log("TRYING TO SAVE", req.body);
 
+  const {
+    startDate,
+    endDate,
+    containerName,
+    avg,
+    min,
+    med,
+    max,
+    failedRequests,
+    succeedRequests,
+    "p(90)": p90,
+    "p(95)": p95,
+  } = req.body;
+
   try {
-    // parsa data
-    // fetch cpu metrics from prometheus
-    // curl -G "http://localhost:9090/api/v1/query_range" \
-    // --data-urlencode 'query=sum(rate(container_cpu_usage_seconds_total{instance=~".*",name=~"master-thesis-nodejs-app-1",name=~".+"}[1m])) by (name) * 100' \
-    // --data-urlencode "start=2024-08-18T00:00:00Z" \
-    // --data-urlencode "end=2024-08-19T01:00:00Z" \
-    // --data-urlencode "step=60"
-    fs.writeFileSync("/results/test.txt", JSON.stringify(req.body));
-    console.log("SAVED ");
+    const [avgCpu, avgRam] = await Promise.all([
+      getAvgCpuUsage({ end: endDate, start: startDate, name: containerName }),
+      getAvgRamUsage({ end: endDate, start: startDate, name: containerName }),
+    ]);
+
+    const line = `${startDate},${endDate},${containerName},${avg},${min},${med},${max},${failedRequests},${succeedRequests},${p90},${p95},${avgCpu},${avgRam}`;
+    savePerformanceTestData(containerName, line);
+
+    console.log("SAVED ", line);
     res.status(200).json({ message: "saved" });
   } catch (err) {
     console.error(err);
@@ -24,7 +43,7 @@ app.post("/save", async (req, res) => {
   }
 });
 
-const port = 4201;
+const port = 4202;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

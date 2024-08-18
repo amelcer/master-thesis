@@ -1,0 +1,115 @@
+services:
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - monitoring
+
+  # cadvisor:
+  #   cadvisor is running from Windows context as there are issues with collecting data in WSL instance
+  #   this is why we are using external network
+  #   service is defined in docker-compose-windows.yml and should be run from Windows context
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3001:3000"
+    environment:
+      GF_SECURITY_DISABLE_INITIAL_ADMIN_CREATION: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: "Admin"
+      GF_AUTH_DISABLE_SIGNOUT_MENU: "true"
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+    volumes:
+      - ./grafana-datasource-config.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+      - 'grafana_storage:/var/lib/grafana'
+    depends_on:
+      - prometheus
+    networks:
+      - monitoring
+
+  # Custom k6 build with access to file write
+  # k6:
+  #   build: ./tests/k6-scripts
+  #   volumes:
+  #     - ./tests/k6-scripts:/scripts
+  #     - ./results:/home/k6/results:rw
+  #   networks:
+  #     - monitoring
+
+  k6:
+    image: grafana/k6
+    volumes:
+      - ./tests/k6-scripts:/scripts
+    environment:
+      - K6_OUT=influxdb=http://influxdb:8086/k6
+    depends_on:
+      - influxdb
+    networks:
+      - monitoring
+
+  influxdb:
+    image: influxdb:1.8
+    ports:
+      - "8086:8086"
+    environment:
+      - INFLUXDB_DB=k6
+    networks:
+      - monitoring
+
+  ## TEST RESULTS ##
+  test-results:
+    build: ./test-results/
+    volumes:
+      - ./results:/results
+    ports:
+      - "4201:4201"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - monitoring
+
+  # ### NODE JS ###
+  nodejs-app:
+    build: ./node/
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 1024M
+    volumes:
+      - ./data-generator/data:/data
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    networks:
+      - monitoring
+  # ### END OF NODE JS ###
+
+  # ### PYTHON ####
+  # python-app:
+  #   build: ./python/
+  # ### END OF PYTHON ###
+
+  # ### GO ####
+  # python-app:
+  #   build: ./go/
+  # ### END OF GO ###
+
+  # ### JAVA ####
+  # python-app:
+  #   build: ./java/
+  # ### END OF JAVA ###
+
+networks:
+  monitoring:
+    external: true
+
+volumes:
+  grafana_storage: {}

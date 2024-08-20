@@ -73,7 +73,22 @@ app.post("/save-performance-metrics", async (req, res) => {
 app.post("/save-breakpoint-metrics", async (req, res) => {
   console.log("TRYING TO SAVE", req.body);
 
-  const { startDate, endDate, containerName, vus } = req.body;
+  const {
+    startDate,
+    endDate,
+    containerName,
+    vus,
+    succeedRequests,
+    failedRequests,
+    properResponseLength,
+    wrongResponseLength,
+    avg,
+    min,
+    med,
+    max,
+    "p(90)": p90,
+    "p(95)": p95,
+  } = req.body;
 
   try {
     const [avgCpu, avgRam] = await Promise.all([
@@ -81,9 +96,24 @@ app.post("/save-breakpoint-metrics", async (req, res) => {
       getAvgRamUsage({ end: endDate, start: startDate, name: containerName }),
     ]);
 
-    const line = [startDate, endDate, containerName, vus, avgCpu, avgRam].join(
-      ","
-    );
+    const line = [
+      startDate,
+      endDate,
+      containerName,
+      vus,
+      avgCpu,
+      avgRam,
+      succeedRequests,
+      failedRequests,
+      properResponseLength,
+      wrongResponseLength,
+      avg,
+      min,
+      med,
+      max,
+      p90,
+      p95,
+    ].join(",");
     saveBreakpointTestData(containerName, line);
 
     console.log("SAVED ", line);

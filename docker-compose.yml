@@ -93,8 +93,21 @@ services:
   # ### END OF NODE JS ###
 
   # ### PYTHON ####
-  # python-app:
-  #   build: ./python/
+  python-app:
+    build: ./python/
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1024M
+    volumes:
+       - ./data-generator/data:/data
+    ports:
+      - "3002:3000"
+    environment:
+      - FLASK_ENV=production
+    networks:
+      - monitoring
   # ### END OF PYTHON ###
 
   # ### GO ####

@@ -101,7 +101,7 @@ services:
           cpus: '1'
           memory: 1024M
     volumes:
-       - ./data-generator/data:/data
+      - ./data-generator/data:/data
     ports:
       - "3002:3000"
     environment:
@@ -111,8 +111,21 @@ services:
   # ### END OF PYTHON ###
 
   # ### GO ####
-  # python-app:
-  #   build: ./go/
+  go-app:
+    build: ./go/
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1024M
+    volumes:
+      - ./data-generator/data:/data
+    ports:
+      - "3003:3000"
+    environment:
+      - GIN_MODE=release
+    networks:
+      - monitoring
   # ### END OF GO ###
 
   # ### JAVA ####

@@ -24,6 +24,12 @@ app.post("/save-performance-metrics", async (req, res) => {
     succeedRequests,
     "p(90)": p90,
     "p(95)": p95,
+    failedResponseTime,
+    succeedResponseTime,
+    correctStructure,
+    wrongStructure,
+    sortedCorrectly,
+    sortedIncorrectly,
   } = req.body;
 
   try {
@@ -32,7 +38,27 @@ app.post("/save-performance-metrics", async (req, res) => {
       getAvgRamUsage({ end: endDate, start: startDate, name: containerName }),
     ]);
 
-    const line = `${startDate},${endDate},${containerName},${avg},${min},${med},${max},${failedRequests},${succeedRequests},${p90},${p95},${avgCpu},${avgRam}`;
+    const line = [
+      startDate,
+      endDate,
+      containerName,
+      avg,
+      min,
+      med,
+      max,
+      failedRequests,
+      succeedRequests,
+      p90,
+      p95,
+      avgCpu,
+      avgRam,
+      failedResponseTime,
+      succeedResponseTime,
+      correctStructure,
+      wrongStructure,
+      sortedCorrectly,
+      sortedIncorrectly,
+    ].join(",");
     savePerformanceTestData(containerName, line);
 
     console.log("SAVED ", line);

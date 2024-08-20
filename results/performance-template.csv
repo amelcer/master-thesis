@@ -1,1 +1,1 @@
-startDate,endDate,containerName,avg,min,med,max,failedRequests,succeedRequests,p(90),p(95)
+startDate,endDate,containerName,avg,min,med,max,failedRequests,succeedRequests,p(90),p(95),avgCpu,avgRam,failedResponseTime,succeedResponseTime,correctStructure,wrongStructure,sortedCorrectly,sortedIncorrectly

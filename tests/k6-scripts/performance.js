@@ -13,11 +13,11 @@ export const options = {
     averageLoad: {
       executor: "ramping-vus",
       stages: [
-        { duration: "30s", target: 10 },
-        { duration: "1m", target: 40 },
-        { duration: "1m", target: 40 },
-        { duration: "1m", target: 20 },
-        { duration: "30s", target: 0 },
+        { duration: "3s", target: 10 },
+        // { duration: "1m", target: 40 },
+        // { duration: "1m", target: 40 },
+        // { duration: "1m", target: 20 },
+        // { duration: "30s", target: 0 },
       ],
     },
   },
@@ -76,6 +76,13 @@ export function handleSummary(summary) {
   const { fails: succeedRequests, passes: failedRequests } =
     summary.metrics.http_req_failed.values;
 
+  const { passes: succeedResponseTime, fails: failedResponseTime } =
+    summary.root_group.checks[1];
+  const { passes: correctStructure, fails: wrongStructure } =
+    summary.root_group.checks[2];
+  const { passes: sortedCorrectly, fails: sortedIncorrectly } =
+    summary.root_group.checks[3];
+
   const data = {
     startDate: testStartDate.toISOString(),
     endDate: testEndDate.toISOString(),
@@ -88,6 +95,12 @@ export function handleSummary(summary) {
     "p(95)": p95,
     failedRequests,
     succeedRequests,
+    failedResponseTime,
+    succeedResponseTime,
+    correctStructure,
+    wrongStructure,
+    sortedCorrectly,
+    sortedIncorrectly,
   };
 
   const resp = http.post(

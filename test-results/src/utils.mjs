@@ -43,8 +43,17 @@ export function getUrlRequest({ end, query, start }) {
  * @param {string} name
  * @returns
  */
-function getResultsFilePath(name) {
+function getPerformanceResultsFilePath(name) {
   return `${RESULTS_FILE_BASE_PATH}/${name}-performance.csv`;
+}
+
+/**
+ *
+ * @param {string} name
+ * @returns
+ */
+function getBreakpointResultsFilePath(name) {
+  return `${RESULTS_FILE_BASE_PATH}/${name}-breakpoint.csv`;
 }
 
 /**
@@ -53,9 +62,7 @@ function getResultsFilePath(name) {
  * @param {string} line
  * @param {string} templateFile
  */
-function saveTestData(name, line, templateFile) {
-  const resultsFileName = getResultsFilePath(name);
-
+function saveTestData(line, resultsFileName, templateFile) {
   if (!fs.existsSync(resultsFileName)) {
     fs.copyFileSync(templateFile, resultsFileName);
   }
@@ -69,7 +76,11 @@ function saveTestData(name, line, templateFile) {
  * @param {string} line
  */
 export function saveBreakpointTestData(name, line) {
-  return saveTestData(name, line, BREAKPOINT_RESULTS_TEMPLATE);
+  return saveTestData(
+    line,
+    getBreakpointResultsFilePath(name),
+    BREAKPOINT_RESULTS_TEMPLATE
+  );
 }
 
 /**
@@ -78,7 +89,11 @@ export function saveBreakpointTestData(name, line) {
  * @param {string} line
  */
 export function savePerformanceTestData(name, line) {
-  return saveTestData(name, line, PERFORMANCE_RESULTS_TEMPLATE);
+  return saveTestData(
+    line,
+    getPerformanceResultsFilePath(name),
+    PERFORMANCE_RESULTS_TEMPLATE
+  );
 }
 
 /**

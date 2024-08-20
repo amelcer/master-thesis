@@ -30,3 +30,31 @@ export default () => {
       JSON.parse(r.body).data.length === NUMBER_OF_RESULTS,
   });
 };
+
+export function handleSummary(summary) {
+  const testEndDate = new Date();
+  const testStartDate = new Date(__ENV.START_TIME);
+
+  const { value: vus } = summary.metrics.vus.values;
+
+  const data = {
+    startDate: testStartDate.toISOString(),
+    endDate: testEndDate.toISOString(),
+    containerName: __ENV.CONTAINER_NAME,
+    vus,
+  };
+
+  const resp = http.post(
+    "http://test-results:4201/save-breakpoint-metrics",
+    JSON.stringify(data),
+    {
+      headers: {
+        "Content-type": "application/json",
+      },
+    }
+  );
+
+  if (resp.status != 200) {
+    console.error("Could not send summary, got status " + resp.status);
+  }
+}

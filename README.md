@@ -21,5 +21,9 @@ docker-compose up
 Provide a path to test to run against running application
 
 ```sh
-docker run k6-1 run /scripts/performance.js --env API_URL=nodejs-app:3000 --env START_TIME=$(date --utc +%FT%TZ) --env CONTAINER_NAME=master-thesis-nodejs-app-1
+# performance test
+docker-compose run k6 run /scripts/performance.js  --env START_TIME=$(date --utc +%FT%TZ) --env API_URL=nodejs-app:3000 --env CONTAINER_NAME=master-thesis-nodejs-app-1
+
+# breakpoint test
+docker-compose run k6 run /scripts/breakpoint.js --env START_TIME=$(date --utc +%FT%TZ) --env API_URL=nodejs-app:3000  --env CONTAINER_NAME=master-thesis-nodejs-app-1
 ```

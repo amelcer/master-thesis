@@ -13,11 +13,11 @@ export const options = {
     averageLoad: {
       executor: "ramping-vus",
       stages: [
-        { duration: "3s", target: 10 },
-        // { duration: "1m", target: 40 },
-        // { duration: "1m", target: 40 },
-        // { duration: "1m", target: 20 },
-        // { duration: "30s", target: 0 },
+        { duration: "30s", target: 10 },
+        { duration: "1m", target: 40 },
+        { duration: "1m", target: 40 },
+        { duration: "1m", target: 20 },
+        { duration: "30s", target: 0 },
       ],
     },
   },

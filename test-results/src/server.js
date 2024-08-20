@@ -43,7 +43,7 @@ app.post("/save-performance-metrics", async (req, res) => {
   }
 });
 
-const port = 4202;
+const port = 4201;
 app.listen(port, () => {
   console.log(`Server running on port ${port}`);
 });

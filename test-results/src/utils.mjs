@@ -3,9 +3,9 @@ import fetch from "node-fetch";
 import qs from "querystring";
 
 const PROMETHEUS_URL = "http://prometheus:9090/api/v1/query_range";
-const BASE_PATH = "/results";
-const PERFORMANCE_RESULTS_TEMPLATE = `${BASE_PATH}/performance-template.csv`;
-const BREAKPOINT_RESULTS_TEMPLATE = `${BASE_PATH}/breakpoint-template.csv`;
+const RESULTS_FILE_BASE_PATH = "/results";
+const PERFORMANCE_RESULTS_TEMPLATE = `${RESULTS_FILE_BASE_PATH}/performance-template.csv`;
+const BREAKPOINT_RESULTS_TEMPLATE = `${RESULTS_FILE_BASE_PATH}/breakpoint-template.csv`;
 
 /**
  *
@@ -44,7 +44,7 @@ export function getUrlRequest({ end, query, start }) {
  * @returns
  */
 function getResultsFilePath(name) {
-  return `${BASE_PATH}/${name}-performance.csv`;
+  return `${RESULTS_FILE_BASE_PATH}/${name}-performance.csv`;
 }
 
 /**
@@ -87,10 +87,11 @@ export function savePerformanceTestData(name, line) {
  */
 async function getAvgUsage(url) {
   const response = await fetch(url);
-  const { status, data } = await response.json();
+  const { status, data, ...rest } = await response.json();
 
   if (status !== "success") {
-    throw new Error("failed to fetch", data);
+    console.error("failed to fetch", data, response, rest);
+    throw new Error("failed to fetch " + JSON.stringify(data, response, rest));
   }
 
   /**

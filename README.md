@@ -21,16 +21,5 @@ docker-compose up
 Provide a path to test to run against running application
 
 ```sh
-docker-compose run k6 run /scripts/{script-name}.js --env API_URL=nodejs-app:3000
-```
-
-Make request for metrics to prometheus:
-
-```
-curl -G "http://localhost:9090/api/v1/query_range" \
---data-urlencode 'query=sum(rate(container_cpu_usage_seconds_total{instance=~".*",name=~"master-thesis-nodejs-app-1",name=~".+"}[1m])) by (name) * 100' \
---data-urlencode "start=2024-08-18T00:00:00Z" \
---data-urlencode "end=2024-08-19T01:00:00Z" \
---data-urlencode "step=60"
-
+docker run k6-1 run /scripts/performance.js --env API_URL=nodejs-app:3000 --env START_TIME=$(date --utc +%FT%TZ) --env CONTAINER_NAME=master-thesis-nodejs-app-1
 ```

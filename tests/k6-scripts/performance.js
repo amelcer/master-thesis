@@ -13,12 +13,11 @@ export const options = {
     averageLoad: {
       executor: "ramping-vus",
       stages: [
-        { duration: "2s", target: 10 },
-        // { duration: "30s", target: 10 },
-        // { duration: "1m", target: 40 },
-        // { duration: "1m", target: 40 },
-        // { duration: "1m", target: 20 },
-        // { duration: "30s", target: 0 },
+        { duration: "30s", target: 10 },
+        { duration: "1m", target: 40 },
+        { duration: "1m", target: 40 },
+        { duration: "1m", target: 20 },
+        { duration: "30s", target: 0 },
       ],
     },
   },
@@ -63,14 +62,36 @@ export function handleSummary(summary) {
   const testEndDate = new Date();
   const testStartDate = new Date(__ENV.START_TIME);
 
+  const {
+    avg,
+    min,
+    med,
+    max,
+    "p(90)": p90,
+    "p(95)": p95,
+  } = summary.metrics.http_req_duration.values;
+
+  // if http_req_failed === true, then it means that request passes the test (so it means that it failed)
+  // http_req_failed................: 0.00%   ✓ 0       ✗ 14  it means that 14 requests have status 2xx and 0 requests have 4xx or 5xx
+  const { fails: succeedRequests, passes: failedRequests } =
+    summary.metrics.http_req_failed.values;
+
   const data = {
     startDate: testStartDate.toISOString(),
-    testEndDate: testEndDate.toISOString(),
-    // add all metrics
+    endDate: testEndDate.toISOString(),
+    containerName: __ENV.CONTAINER_NAME,
+    avg,
+    min,
+    med,
+    max,
+    "p(90)": p90,
+    "p(95)": p95,
+    failedRequests,
+    succeedRequests,
   };
 
   const resp = http.post(
-    "http://test-results:4201/save",
+    "http://test-results:4201/save-performance-metrics",
     JSON.stringify(data),
     {
       headers: {

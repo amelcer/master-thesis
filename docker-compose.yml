@@ -80,7 +80,7 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '2'
+          cpus: '1'
           memory: 1024M
     volumes:
       - ./data-generator/data:/data

@@ -27,21 +27,14 @@ export async function getObjectsFromFile(from = 0, to = undefined) {
   /**
    * @type {Array<string>}
    */
-  let csvHeaders;
   let lineNumber = -1;
   const result = [];
 
   for await (const line of rl) {
     lineNumber += 1;
 
-    // need to read first line as it contains csv headers
-    if (lineNumber === 0) {
-      csvHeaders = line.split(",");
-
-      continue;
-    }
-
-    if (lineNumber < from) {
+    // skip csv headers or lines belo starting point
+    if (lineNumber === 0 || lineNumber < from) {
       continue;
     }
 
@@ -50,8 +43,15 @@ export async function getObjectsFromFile(from = 0, to = undefined) {
     }
 
     const splittedLine = line.split(",");
-    const entries = csvHeaders.map((key, index) => [key, splittedLine[index]]);
-    result.push(Object.fromEntries(entries));
+    const person = {
+      id: splittedLine[0],
+      name: splittedLine[1],
+      lastName: splittedLine[2],
+      birthday: splittedLine[3],
+      email: splittedLine[4],
+    };
+
+    result.push(person);
   }
 
   return result;
@@ -59,8 +59,8 @@ export async function getObjectsFromFile(from = 0, to = undefined) {
 /**
  *
  * @param {Person[]} array
- * @returns {Person[]}
+ * @returns {void}
  */
-export function getSortPersonArray(array) {
-  return array.toSorted((a, b) => a.lastName.localeCompare(b.lastName));
+export function sortPersonArray(array) {
+  array.sort((a, b) => a.lastName.localeCompare(b.lastName));
 }

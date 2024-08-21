@@ -1,13 +1,12 @@
 import express from "express";
-import { getObjectsFromFile, getSortPersonArray } from "./utils.mjs";
+import { getObjectsFromFile, sortPersonArray } from "./utils.mjs";
 
 const app = express();
 app.use(express.json());
 
 app.get("/people", async (req, res) => {
   const { from, to } = req.query;
-  let parsedFrom =
-    typeof to === "undefined" ? undefined : Number.parseInt(from);
+  let parsedFrom = typeof from === "undefined" ? 0 : Number.parseInt(from);
   let parsedTo = typeof to === "undefined" ? undefined : Number.parseInt(to);
 
   if (parsedFrom && !Number.isSafeInteger(parsedFrom)) {
@@ -27,12 +26,14 @@ app.get("/people", async (req, res) => {
 
   try {
     const data = await getObjectsFromFile(parsedFrom, parsedTo);
+    sortPersonArray(data);
 
     res.json({
       count: 500_000,
-      data: getSortPersonArray(data),
+      data,
     });
   } catch (e) {
+    console.error(e);
     res.status(500).json({ error: e || "Something went wrong" });
   }
 });

@@ -2,50 +2,99 @@ package main
 
 import (
 	"encoding/csv"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"sort"
 	"strconv"
-
-	"github.com/gin-gonic/gin"
 )
 
-type Person struct {
-	ID       string
-	Name     string
-	LastName string
-	Birthday string
-	Email    string
+type person struct {
+	Id       string `json:"id"`
+	Name     string `json:"name"`
+	LastName string `json:"lastName"`
+	Birthday string `json:"birthday"`
+	Email    string `json:"email"`
 }
 
-func getPeople(c *gin.Context) {
-	from, _ := strconv.Atoi(c.DefaultQuery("from", "0"))
-	to, _ := strconv.Atoi(c.Query("to"))
+func main() {
+	http.HandleFunc("/people", peopleHandler)
+	fmt.Println("Server is listening on port 3000...")
+	http.ListenAndServe(":3000", nil)
+}
 
-	if from > to {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "'from' value should be lower than 'to' value"})
+func peopleHandler(w http.ResponseWriter, r *http.Request) {
+	fromStr := r.URL.Query().Get("from")
+	toStr := r.URL.Query().Get("to")
+
+	from, err := strconv.Atoi(fromStr)
+	if err != nil || from < 0 {
+		from = 0
+	}
+
+	to, err := strconv.Atoi(toStr)
+	if err != nil || to < from {
+		to = int(^uint(0) >> 1) // max int
+	}
+
+	people, err := getPeopleInRange(from, to)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	response := struct {
+		Count int      `json:"count"`
+		Data  []person `json:"data"`
+	}{
+		Count: 500000,
+		Data:  people,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func getPeopleInRange(from, to int) ([]person, error) {
 	file, err := os.Open("/data/data.csv")
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
+		return nil, err
 	}
 	defer file.Close()
 
 	reader := csv.NewReader(file)
-	records, _ := reader.ReadAll()
-	people := []Person{}
+	_, err = reader.Read() 
+	if err != nil {
+		return nil, err
+	}
 
-	for _, record := range records[from+1 : to+1] {
-		person := Person{
-			ID:       record[0],
+	var people []person
+	lineNumber := 0
+
+	for {
+		record, err := reader.Read()
+		if err != nil {
+			break
+		}
+		lineNumber++
+
+		if lineNumber < from { 
+			continue
+		}
+
+		if lineNumber > to {
+			break
+		}
+
+		person := person{
+			Id:       record[0],
 			Name:     record[1],
 			LastName: record[2],
 			Birthday: record[3],
 			Email:    record[4],
 		}
+
 		people = append(people, person)
 	}
 
@@ -53,11 +102,5 @@ func getPeople(c *gin.Context) {
 		return people[i].LastName < people[j].LastName
 	})
 
-	c.JSON(http.StatusOK, gin.H{"count": 500000, "data": people})
-}
-
-func main() {
-	r := gin.Default()
-	r.GET("/people", getPeople)
-	r.Run(":3000")
+	return people, nil
 }

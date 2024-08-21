@@ -129,8 +129,19 @@ services:
   # ### END OF GO ###
 
   # ### JAVA ####
-  # python-app:
-  #   build: ./java/
+  java-app:
+    build: ./java/
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1024M
+    volumes:
+      - ./data-generator/data:/data
+    ports:
+      - "3004:3000"
+    networks:
+      - monitoring
   # ### END OF JAVA ###
 
 networks:

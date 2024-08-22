@@ -34,6 +34,11 @@ for app in "${apps[@]}"; do
     sleep 120
 
     run_tests "breakpoint" $app
+
+    log_with_time "End of breakpoint test"
+    log_with_time "Waiting for app to stabilize [5min]"
+    sleep 300
+    
     run_tests "performance" $app
 
     docker-compose stop $app

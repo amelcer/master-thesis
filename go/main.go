@@ -1,13 +1,15 @@
 package main
 
 import (
-	"encoding/csv"
-	"encoding/json"
+	"bufio"
 	"fmt"
 	"net/http"
 	"os"
 	"sort"
 	"strconv"
+	"math"
+	"strings"
+	"github.com/gin-gonic/gin"
 )
 
 type person struct {
@@ -19,30 +21,42 @@ type person struct {
 }
 
 func main() {
-	http.HandleFunc("/people", peopleHandler)
+	gin.SetMode(gin.ReleaseMode)
+
+	r := gin.New()
+	r.GET("/people", peopleHandler)
+
 	fmt.Println("Server is listening on port 3000...")
-	http.ListenAndServe(":3000", nil)
+	r.Run(":3000")
 }
 
-func peopleHandler(w http.ResponseWriter, r *http.Request) {
-	fromStr := r.URL.Query().Get("from")
-	toStr := r.URL.Query().Get("to")
+func peopleHandler(c *gin.Context) {
+	fromStr := c.DefaultQuery("from", "0")
+	toStr := c.DefaultQuery("to", strconv.Itoa(math.MaxInt32))
 
 	from, err := strconv.Atoi(fromStr)
-	if err != nil || from < 0 {
+	if err != nil {
 		from = 0
 	}
 
 	to, err := strconv.Atoi(toStr)
-	if err != nil || to < from {
-		to = int(^uint(0) >> 1) // max int
+	if err != nil {
+		to = math.MaxInt32
+	}
+
+	if from > to {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "From is bigger than to"})
 	}
 
 	people, err := getPeopleInRange(from, to)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	sort.Slice(people, func(i,j int) bool {
+		return people[i].LastName < people[j].LastName
+	})
 
 	response := struct {
 		Count int      `json:"count"`
@@ -52,34 +66,29 @@ func peopleHandler(w http.ResponseWriter, r *http.Request) {
 		Data:  people,
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	c.JSON(http.StatusOK, response)
 }
 
 func getPeopleInRange(from, to int) ([]person, error) {
-	file, err := os.Open("/data/data.csv")
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
+	readFile, err := os.Open("/data/data.csv")
 
-	reader := csv.NewReader(file)
-	_, err = reader.Read() 
-	if err != nil {
-		return nil, err
-	}
+    if err != nil {
+        fmt.Println(err)
+    }
 
-	var people []person
+    fileScanner := bufio.NewScanner(readFile)
+    fileScanner.Split(bufio.ScanLines)
+
+	fileScanner.Scan()
+	fileScanner.Text() // read header
+	
+    people := make([]person, 0)
 	lineNumber := 0
 
-	for {
-		record, err := reader.Read()
-		if err != nil {
-			break
-		}
-		lineNumber++
+    for fileScanner.Scan() {
+        lineNumber++
 
-		if lineNumber < from { 
+		if lineNumber < from {
 			continue
 		}
 
@@ -87,20 +96,21 @@ func getPeopleInRange(from, to int) ([]person, error) {
 			break
 		}
 
+
+		record :=  strings.Split(fileScanner.Text(), ",")
 		person := person{
-			Id:       record[0],
-			Name:     record[1],
-			LastName: record[2],
-			Birthday: record[3],
-			Email:    record[4],
+			Id:        record[0],
+			Name:      record[1],
+			LastName:  record[2],
+			Birthday:  record[3],
+			Email:     record[4],
 		}
 
+
 		people = append(people, person)
-	}
+    }
 
-	sort.Slice(people, func(i, j int) bool {
-		return people[i].LastName < people[j].LastName
-	})
-
+    readFile.Close()
 	return people, nil
+
 }

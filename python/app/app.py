@@ -1,5 +1,4 @@
 from flask import Flask, request, jsonify
-import csv
 
 app = Flask(__name__)
 
@@ -28,23 +27,27 @@ def get_people_in_range(from_line, to_line):
     people = []
     file_path = '/data/data.csv'
 
-    with open(file_path, newline='') as csvfile:
-        reader = csv.DictReader(csvfile)
-        headers = reader.fieldnames
+    with open(file_path, newline='') as f:
+        f.readline() # skip header
+        line_number = 0
 
-        for line_number, row in enumerate(reader, start=1):
-            if line_number < from_line:  
+        while line := f.readline():
+            line_number += 1
+
+            if line_number < from_line:
                 continue
             if line_number > to_line:
                 break
 
+            values = line.split(',')
             person = {
-                'id': row[headers[0]],
-                'name': row[headers[1]],
-                'lastName': row[headers[2]],
-                'birthday': row[headers[3]],
-                'email': row[headers[4]],
+                'id': values[0],
+                'name': values[1],
+                'lastName': values[2],
+                'birthday': values[3],
+                'email': values[4],
             }
+
             people.append(person)
     
     return people

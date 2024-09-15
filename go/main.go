@@ -5,14 +5,15 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"sort"
 	"strconv"
 	"math"
 	"strings"
 	"github.com/gin-gonic/gin"
+	"github.com/psilva261/timsort"
 )
 
-type person struct {
+
+type Person struct {
 	Id       string `json:"id"`
 	Name     string `json:"name"`
 	LastName string `json:"lastName"`
@@ -54,13 +55,13 @@ func peopleHandler(c *gin.Context) {
 		return
 	}
 
-	sort.Slice(people, func(i,j int) bool {
-		return people[i].LastName < people[j].LastName
+	timsort.Sort(people, func(a, b interface{}) bool {
+		return a.(Person).LastName < b.(Person).LastName
 	})
 
 	response := struct {
 		Count int      `json:"count"`
-		Data  []person `json:"data"`
+		Data  []interface{} `json:"data"`
 	}{
 		Count: 500000,
 		Data:  people,
@@ -69,7 +70,7 @@ func peopleHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-func getPeopleInRange(from, to int) ([]person, error) {
+func getPeopleInRange(from, to int) ([]interface{}, error) {
 	readFile, err := os.Open("/data/data.csv")
 
     if err != nil {
@@ -82,7 +83,7 @@ func getPeopleInRange(from, to int) ([]person, error) {
 	fileScanner.Scan()
 	fileScanner.Text() // read header
 	
-    people := make([]person, 0)
+    people := make([]interface{}, 0)
 	lineNumber := 0
 
     for fileScanner.Scan() {
@@ -98,7 +99,7 @@ func getPeopleInRange(from, to int) ([]person, error) {
 
 
 		record :=  strings.Split(fileScanner.Text(), ",")
-		person := person{
+		person := Person{
 			Id:        record[0],
 			Name:      record[1],
 			LastName:  record[2],

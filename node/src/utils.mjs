@@ -24,16 +24,16 @@ export async function getObjectsFromFile(from = 0, to = undefined) {
     crlfDelay: Infinity,
   });
 
+  let lineNumber = -1;
   /**
    * @type {Array<string>}
    */
-  let lineNumber = -1;
   const result = [];
 
   for await (const line of rl) {
     lineNumber += 1;
 
-    // skip csv headers or lines belo starting point
+    // skip csv headers or lines below starting point
     if (lineNumber === 0 || lineNumber < from) {
       continue;
     }

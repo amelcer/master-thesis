@@ -9,31 +9,10 @@ def get_people():
     to_line = request.args.get('to', default=None, type=int)
 
     if to_line is None or to_line < from_line:
-        to_line = float('inf') 
-
-    people = []
-    file_path = '/data/data.csv'
+        to_line = float('inf')
 
     try:
-        with open(file_path, newline='') as csvfile:
-            reader = csv.DictReader(csvfile)
-            headers = reader.fieldnames
-
-            for line_number, row in enumerate(reader, start=1):
-                if line_number < from_line:  
-                    continue
-                if line_number > to_line:
-                    break
-
-                person = {
-                    'id': row[headers[0]],
-                    'name': row[headers[1]],
-                    'lastName': row[headers[2]],
-                    'birthday': row[headers[3]],
-                    'email': row[headers[4]],
-                }
-                people.append(person)
-
+        people = get_people_in_range(from_line, to_line)
         people.sort(key=lambda p: p['lastName'])
 
         return jsonify({
@@ -43,3 +22,30 @@ def get_people():
 
     except Exception as e:
         return str(e), 500
+
+
+def get_people_in_range(from_line, to_line):
+    people = []
+    file_path = '/data/data.csv'
+
+    with open(file_path, newline='') as csvfile:
+        reader = csv.DictReader(csvfile)
+        headers = reader.fieldnames
+
+        for line_number, row in enumerate(reader, start=1):
+            if line_number < from_line:  
+                continue
+            if line_number > to_line:
+                break
+
+            person = {
+                'id': row[headers[0]],
+                'name': row[headers[1]],
+                'lastName': row[headers[2]],
+                'birthday': row[headers[3]],
+                'email': row[headers[4]],
+            }
+            people.append(person)
+    
+    return people
+

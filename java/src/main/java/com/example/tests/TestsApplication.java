@@ -23,7 +23,7 @@ public class TestsApplication {
 class PeopleController {
 
 	
- @GetMapping("/people")
+    @GetMapping("/people")
     public Map<String, Object> getPeople(
             @RequestParam(value = "from", required = false) Integer from,
             @RequestParam(value = "to", required = false) Integer to) {
@@ -40,6 +40,13 @@ class PeopleController {
             throw new IllegalArgumentException("'from' parameter cannot be greater than 'to' parameter");
         }
 
+        List<Map<String, String>> people = this.getPeopleInRange(from, to);
+        people.sort(Comparator.comparing(p -> p.get("lastName")));
+
+        return Map.of("count", 500000, "data", people);
+    }
+
+    private List<Map<String, String>> getPeopleInRange(int from, int to) {
         List<Map<String, String>> people = new ArrayList<>();
 
         try (BufferedReader reader = new BufferedReader(new FileReader("/data/data.csv"))) {
@@ -61,14 +68,11 @@ class PeopleController {
                 Map<String, String> person = Map.of(headers[0], values[0], headers[1], values[1], headers[2], values[2],  headers[3], values[3],  headers[4], values[4]);
                 people.add(person);
             }
-
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("Failed to read the CSV file");
         }
 
-        people.sort(Comparator.comparing(p -> p.get("lastName")));
-
-        return Map.of("count", 500000, "data", people);
+        return people;
     }
 }

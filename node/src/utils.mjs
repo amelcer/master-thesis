@@ -39,6 +39,7 @@ export async function getObjectsFromFile(from = 0, to = undefined) {
     }
 
     if (lineNumber > to) {
+      rl.close();
       break;
     }
 

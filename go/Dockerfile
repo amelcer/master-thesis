@@ -10,6 +10,8 @@ RUN go mod init
 
 RUN go get -u github.com/gin-gonic/gin
 
+RUN go get -u github.com/psilva261/timsort
+
 RUN go build
 
 CMD ["./app"]
